@@ -1,0 +1,7 @@
+﻿  main2.c
+D:\C\Day_1\Day_1\main2.c(14,2): warning C4013: 関数 'shuffle' は定義されていません。int 型の値を返す外部関数と見なします。
+D:\C\Day_1\Day_1\main2.c(44,2): warning C4013: 関数 'srand' は定義されていません。int 型の値を返す外部関数と見なします。
+D:\C\Day_1\Day_1\main2.c(44,8): warning C4013: 関数 'time' は定義されていません。int 型の値を返す外部関数と見なします。
+D:\C\Day_1\Day_1\main2.c(51,13): warning C4013: 関数 'rand' は定義されていません。int 型の値を返す外部関数と見なします。
+D:\C\Day_1\Day_1\main2.c(57,14): warning C4047: 'return': 間接参照のレベルが 'int' と 'int *' で異なっています。
+  Day_1.vcxproj -> D:\C\Day_1\x64\Debug\Day_1.exe
