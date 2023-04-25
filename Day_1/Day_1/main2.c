@@ -14,6 +14,23 @@ int main(void) {
 	printf("%c\n", test1);
 	printf("%c\n", test2);
 
+	//String
+	char* str1 = "String Type";
+	char* str2 = "Desu";
+	char str3[20];
+	/*
+	strcpy(str3, str1);
+	strcat(str3, " ");
+	strcat(str3, str2);
+	
+	printf("%s\n", str3);
+	*/
+	/*
+	sprintf(str3, "%s %s \n", str1, str2);
+	printf("%s\n", str3);
+	*/
+
+
 	/*
 	Function: Infinity Loop
 	*/
