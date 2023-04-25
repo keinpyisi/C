@@ -1,0 +1,4 @@
+﻿  main.c
+D:\C\Day3\main.c(36,13): warning C4013: 'checkDeadMap' undefined; assuming extern returning int
+D:\C\Day3\main.c(54,17): warning C4013: 'rand' undefined; assuming extern returning int
+  Day3.vcxproj -> D:\C\Day3\x64\Debug\Day3.exe
