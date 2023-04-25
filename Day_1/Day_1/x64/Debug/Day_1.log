@@ -1,6 +1,6 @@
 ﻿  main2.c
-D:\C\Day_1\Day_1\main2.c(120,2): warning C4013: 'srand' undefined; assuming extern returning int
-D:\C\Day_1\Day_1\main2.c(120,8): warning C4013: 'time' undefined; assuming extern returning int
-D:\C\Day_1\Day_1\main2.c(127,13): warning C4013: 'rand' undefined; assuming extern returning int
-D:\C\Day_1\Day_1\main2.c(133,14): warning C4047: 'return': 'int' differs in levels of indirection from 'int *'
+D:\C\Day_1\Day_1\main2.c(126,2): warning C4013: 'srand' undefined; assuming extern returning int
+D:\C\Day_1\Day_1\main2.c(126,8): warning C4013: 'time' undefined; assuming extern returning int
+D:\C\Day_1\Day_1\main2.c(133,13): warning C4013: 'rand' undefined; assuming extern returning int
+D:\C\Day_1\Day_1\main2.c(139,14): warning C4047: 'return': 'int' differs in levels of indirection from 'int *'
   Day_1.vcxproj -> D:\C\Day_1\x64\Debug\Day_1.exe

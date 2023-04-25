@@ -7,6 +7,13 @@ void printline(char line[], int count);
 void main_program(int max_size);
 
 int main(void) {
+	//How to Use Pointer
+	const char *test = "JTECHABCDE";
+	char test1 = *test;
+	char test2 = *(test + 1);
+	printf("%c\n", test1);
+	printf("%c\n", test2);
+
 	/*
 	Function: Infinity Loop
 	*/
