@@ -1,75 +1,91 @@
+Ôªø#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
+#include <time.h>
+#include <stdlib.h>
 #define ROW 36
-#define COL 36
+#define COL 72
+#define LIVE '@'
+#define DEAD '.'
 
-void init();
-void showmap(int map[COL][ROW]);
+void init(int map[ROW][COL]);
+void showmap(int map[ROW][COL]);
 void copy2DimensioalArray(int source[ROW][COL], int target[ROW][COL]);
-void evolve(int map[COL][ROW]);
-int checkMap(int source[COL][ROW], int destination[COL][ROW]);
-int getSurviveCount(int source[COL][ROW]);
-/* 2D array declaration*/
-int map[COL][ROW];
-int temp[COL][ROW];
-int dead[COL][ROW];
-FILE* fp;
-
+void evolve(int map[ROW][COL]);
+int getSurviveCount(int temp[ROW][COL], int ypos, int xpos);
+void readfile();
 int main(void) {
- 
-    
-    printf("\033[2J");
+
+    printf("Press any numbers: ");
+    int c = getc(stdin);
+    srand(c);
+
+   // readfile();
+    printf("\033[2J"); // ÁîªÈù¢„ÇíÊ∂à„Åô
     
     //init map
-    init();
-    copy2DimensioalArray(map, temp);
+    int map[ROW][COL];
+    init(map);
+   
     int gen=1;
     //Generation
-    while(-1) {
-       
-        
-        showmap(map); 
-        evolve(map);
-        printf("ê¢ë„ = % d\n", gen);
-        printf("ê∂ë∂êî = % d\n", getSurviveCount(map));
-        //printf("\n");
-        printf("\033[2;1H"); // ÉJÅ[É\Éãà íuÇÅAçÇÇ≥2çsñ⁄ÅAâ°1ï∂éöñ⁄Ç…à⁄ìÆÅ@ÅÀ ê≥ÇµÇ≠ìÆçÏÇµÇ»Ç¢èÍçáÇÕç≈èIÉyÅ[ÉWÇéQè∆ÇµÇƒÇ≠ÇæÇ≥Ç¢ÅB
-        if (checkDeadMap(dead, map) == 0) {
-            printf("EVERYONE IS DEAD. \n");
-            break;
-        }
-      
-        gen += 1;
+    for (gen = 1; gen < 1000; gen++) {
 
-    }
+        printf("\033[2;1H");
+        printf("‰∏ñ‰ª£ = %d \n", gen);
+        showmap(map);
+        evolve(map);
+    } 
+    
     
     
     return 0;
 }
 
-//Initialize Data
-void init() {
-    //generate matrix canvas with random values (live and dead cells)
-    for (int row = 0; row < ROW; row++) {
-        for (int col = 0; col < COL; col++) {
-            if (rand() % 2 == 0) {
-                map[row][col] = '.';
-            }
-            else {
-                //map[row][col] = '@';
-                map[row][col] = '@';
-            }
-            dead[row][col] = '@';
+void readfile() {
+    int c;
+    FILE* fp;
+    float array[ROW][COL];
 
-        }
+    if ((fp = fopen("sample_data1.txt", "r")) != NULL) {
+       
+        
+        
+
     }
     
 }
+
+//Initialize Data
+void init(int map[ROW][COL]) {
+    //generate matrix canvas with random values (live and dead cells)
+    for (int row = 0; row < ROW; row++) {
+        for (int col = 0; col < COL; col++) {
+            int num = rand() % 10;
+            if (num < 7) {
+                map[row][col] = 0;
+            }
+            else {
+                map[row][col] = 1;
+            }
+            
+                //
+        }
+    }
+    
+    
+}
+
 //Show Map
-void showmap(int map[COL][ROW]) { 
+void showmap(int map[ROW][COL]) { 
     //Displaying array elements
-    for (int col = 0; col < COL; col++) {
-        for (int row = 0; row < ROW; row++) {
-            printf("%c ", map[col][row]);
+    for (int row = 0; row < ROW; row++) {
+        for (int col = 0; col < COL; col++) {
+            if (map[row][col] == 1) {
+                printf("%c", LIVE);
+            }
+            else  {
+                printf("%c", DEAD);
+            }
 
         }
         printf("\n");
@@ -77,88 +93,29 @@ void showmap(int map[COL][ROW]) {
 }
 
 //Evolve Cells
-void evolve(int map[COL][ROW]) {
-    //False
-    if (checkMap(temp, map) != 1) {
-        
-        
-        copy2DimensioalArray(map, temp);
-        int neighbors = 0;
-        
-        //Check 2D Map If it equal or not
+void evolve(int map[ROW][COL]) {
+    int temp[ROW][COL];
+    int sum;
+    copy2DimensioalArray(map, temp);
+    
 
-        for (int row = 0; row < ROW; row++) {
-            for (int col = 0; col < COL; col++) {
-               
-                neighbors = 0;
+    for (int row = 0; row < ROW; row++) {
+        for (int col = 0; col < COL; col++) {
 
-                 if (row > 0 && col > 0 && map[row - 1][col - 1] == '.')
-                 {
-                     neighbors++;
-                 }
-                 if (col > 0 && map[row][col - 1] == '.')
-                 {
-                     neighbors++;
-                 }
+            sum = getSurviveCount(temp, row, col);
 
-                 if (col > 0 && row < ROW - 1 && map[row + 1][col - 1] == '.')
-                 {
-                     neighbors++;
-                 }
-
-                 if (row > 0 && map[row - 1][col] == '.')
-                 {
-                     neighbors++;
-                 }
-
-                 if (col < 0 && row < ROW - 1 && map[row + 1][row - 1] == '.')
-                 {
-                     neighbors++;
-                 }
-
-                 if (row > 0 && col < COL - 1 && map[row - 1][col + 1] == '.')
-                 {
-                     neighbors++;
-                 }
-
-                 if (col < COL - 1 && map[row][col + 1] == '.')
-                 {
-                     neighbors++;
-                 }
-
-                 if (row < ROW - 1 && col < COL - 1 && map[row + 1][col + 1] == '.')
-                 {
-                     neighbors++;
-                 }
-
-                 if (neighbors < 2 || neighbors > 3) {
-                     // 1. Any live cell with fewer than two live neighbours dies
-                     // 3. Any live cell with more than three live neighbours dies
-                     map[row][col] = '@';
-                 }
-                 else if (neighbors == 4) {
-                     // 4. Any dead cell with exactly three live neighbours becomes a live cell.
-                     map[row][col] = '.';
-                 }
-                 
-                 
-                
-
-
+            if (temp[row][col] == 0 && sum ==  3) {
+                //If Sum of the cell is 3 , New Cell
+                map[row][col] = 1;
+            }
+            else if(temp[row][col] == 1 && (sum<=1 || sum>=4)) {
+                //If Sum of the cell is 4 or greather than 4 , Dead
+                map[row][col] = 0;
             }
            
-
-
         }
-        
-       
- 
     }
-    else {
     
-        init();
-       //True
-    }
 
 }
 
@@ -173,39 +130,44 @@ void copy2DimensioalArray(int source[ROW][COL], int target[ROW][COL]) {
     }
 }
 
-//Check 2D Map If it equal or not
-int checkMap(int source[COL][ROW], int destination[COL][ROW]) {
-    for (int row = 0; row < ROW; row++) {
-        for (int col = 0; col < COL; col++) {
-            if (destination[row][col] != source[row][col]) {
-                return 0;
-            }
-        }
-    }
-    return 1;
-}
 
 //Check Survived Cell
-int getSurviveCount(int source[COL][ROW]) {
-    int survive = 0;
-    for (int row = 0; row < ROW; row++) {
-        for (int col = 0; col < COL; col++) {
-            if (source[row][col] == '.') {
-                survive += 1;
-            }
-        }
+int getSurviveCount(int temp[ROW][COL],int row,int col) {
+    int sum = 0;
+
+    if ( (row > 0) && (col > 0)) {
+        sum+= temp[row - 1][col - 1]; //Left Up
     }
-    return survive;
+
+    if (row > 0) {
+        sum += temp[row - 1][col]; //Left
+    }
+
+    if ((row > 0) && (col < COL - 1) ) {
+        sum += temp[row - 1][col + 1]; //Left Down
+    }
+    
+    if ((row > 0) && (col < COL -1)) {
+        sum += temp[row][col + 1]; //Down X=0 y= 1
+    }
+
+    if ((row < ROW - 1) && (col < COL - 1) ) {
+        sum += temp[row + 1][col + 1]; //Right Down
+    }
+
+    if ((row < ROW - 1) && (col > 0)) {
+        sum += temp[row + 1][col]; //Right
+    }
+
+    if ((row < ROW - 1) && (col > 0)) {
+        sum += temp[row + 1][col - 1]; //Right Up
+    }
+
+    if ((row < ROW - 1) && (col < COL - 1)) {
+        sum += temp[row + 1][col + 1]; //Up
+    }
+
+    return sum;
 }
 
-//Check 2D Map If it equal or not
-int checkDeadMap(int source[COL][ROW], int destination[COL][ROW]) {
-    for (int row = 0; row < ROW; row++) {
-        for (int col = 0; col < COL; col++) {
-            if (destination[row][col] != source[row][col]) {
-                return 1;
-            }
-        }
-    }
-    return 0;
-}
+

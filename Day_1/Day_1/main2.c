@@ -7,17 +7,24 @@ void printline(char line[], int count);
 void main_program(int max_size);
 
 int main(void) {
+	/*Debug 
+	F10 -> Move
+
+	*/
+
+
 	//How to Use Pointer
-	const char *test = "JTECHABCDE";
+	/*const char* test = "JTECHABCDE";
 	char test1 = *test;
 	char test2 = *(test + 1);
 	printf("%c\n", test1);
 	printf("%c\n", test2);
-
+	*/
+	
 	//String
-	char* str1 = "String Type";
-	char* str2 = "Desu";
-	char str3[20];
+	//char* str1 = "String Type";
+	//char* str2 = "Desu";
+	//char str3[20];
 	/*
 	strcpy(str3, str1);
 	strcat(str3, " ");
