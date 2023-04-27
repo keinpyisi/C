@@ -1,4 +1,7 @@
 ﻿  main.c
-D:\C\Day3\main.c(47,11): warning C4101: 'array': unreferenced local variable
-D:\C\Day3\main.c(45,9): warning C4101: 'c': unreferenced local variable
+D:\C\Day3\main.c(29,9): warning C4013: 'isdigit' undefined; assuming extern returning int
+D:\C\Day3\main.c(30,21): warning C4047: 'function': 'unsigned int' differs in levels of indirection from 'char [127]'
+D:\C\Day3\main.c(30,15): warning C4024: 'srand': different types for formal and actual parameter 1
+D:\C\Day3\main.c(20,9): warning C4101: 'user': unreferenced local variable
+D:\C\Day3\main.c(67,32): warning C4013: 'strlen' undefined; assuming extern returning int
   Day3.vcxproj -> D:\C\Day3\x64\Debug\Day3.exe
