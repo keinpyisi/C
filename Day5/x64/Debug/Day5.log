@@ -1,0 +1,3 @@
+﻿  main.c
+D:\C\Day5\main.c(134): warning C4715: 'getDay': not all control paths return a value
+  Day5.vcxproj -> D:\C\Day5\x64\Debug\Day5.exe

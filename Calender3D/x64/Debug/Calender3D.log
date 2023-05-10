@@ -1,0 +1,3 @@
+﻿  main2.c
+D:\C\Calender3D\main2.c(178,12): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+  Calender3D.vcxproj -> D:\C\Calender3D\x64\Debug\Calender3D.exe

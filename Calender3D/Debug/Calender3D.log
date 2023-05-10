@@ -1,0 +1,3 @@
+﻿  main.c
+D:\C\Calender3D\main.c(411): warning C4715: 'getDay': not all control paths return a value
+  Calender3D.vcxproj -> D:\C\Calender3D\Debug\Calender3D.exe
