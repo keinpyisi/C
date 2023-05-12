@@ -1,0 +1,205 @@
+マップの初期化と表示は別の関数です。初期化が間違っているか、表示が間違っているかの切り分けをします。
+具体的には、表示の前にブレークポイントで止めて、配列の中を見てください。
+そうですね。体調管理はとても大事です。気を付けてください。(星)
+
+/***********************************************************************
+* 
+* ライフゲーム
+* 
+* 作成者		作成日
+* -----------	-----------
+* 高橋謙人		2023/04/26
+* 
+* 
+* 
+* 
+************************************************************************/
+
+//#define _CRT_SECURE_NO_WARNINGS
+
+#include<stdio.h>
+#include<stdlib.h>
+#include<time.h>
+
+#define WORLD_W 76	// 横の大きさ
+#define WORLD_H 38	// 縦の大きさ
+
+//scanfのエラーを止めるもの
+#pragma warning(disable:4996)
+
+//プロトタイプ宣言群
+void reset(char map_reset[WORLD_H][WORLD_W]);
+void map_set(char denote[WORLD_H][WORLD_W]);
+void generation(char temp[WORLD_H][WORLD_W]) ;
+int lifeCount(char temp[WORLD_H][WORLD_W], int ypos, int xpos) ;
+
+/***********************************************************************
+後で使うもの
+char *filename = "C:¥¥Users¥¥user¥¥source¥¥repos¥¥test¥¥test¥¥source.c";
+fp = fopen(filename,"r");
+
+char buf[128]
+len = strlen(buf);
+if (len>=WORLD_W)
+len =  WORLD_W;
+************************************************************************/
+
+
+//メイン関数
+int main(void) {
+
+	//srand((unsigned)time(NULL));
+
+	char map[WORLD_H][WORLD_W];
+	
+	//画面を消す
+	printf("\033[2J");
+	
+	//初期化
+	reset(map);
+	
+	//ループ
+	for (int gen = 1; gen < 1000; gen++){
+
+		//カーソル位置を高さ２行目、横１文字目に移動
+		printf("\033[2;1H");
+		printf("世代=%d\n\n", gen);
+
+		map_set(map);	//マップの表示
+		generation(map);	//世代を進める
+		
+	}
+	return 0;
+}
+
+
+
+//初期化ルーチン
+void reset(char map_reset[WORLD_H][WORLD_W]) {
+
+	/* ループ処理と配列要素指定 */
+	int ypos;
+	int xpos;
+
+	for (ypos = 0; ypos < WORLD_H; ypos++) {		//縦のループ
+		for (xpos = 0; xpos < WORLD_W; xpos++) {	//横のループ
+			int randvl = rand() % 10;
+
+			if (randvl < 7) {
+				map_reset[ypos][xpos] = 0;	//死亡
+			}
+
+			else {
+				map_reset[ypos][xpos] = 1;	//生存
+			}
+
+		}
+	}
+}
+
+
+//mapの表示ルーチン
+void map_set(char denote[WORLD_H][WORLD_W]){
+
+	/* ループ処理と配列要素指定 */
+	int ypos;
+	int xpos;
+
+
+	for (ypos = 0; ypos < WORLD_H; ypos++) { //縦のループ
+		for (xpos = 0; xpos < WORLD_W; xpos++) { //横のループ
+			if (denote[ypos][xpos] != 0) {
+				printf("@");
+			}
+			else {
+				printf(".");
+			}
+		}
+		printf("\n");
+	}
+}
+
+
+//世代の進行
+void generation(char map[WORLD_H][WORLD_W]) {
+	
+	int ypos;
+	int xpos;
+	
+	char alive;
+	char temp[WORLD_H][WORLD_W];
+
+	for (ypos = 0; ypos < WORLD_H; ypos++) { //縦のループ
+		for (xpos = 0; xpos < WORLD_W; xpos++) { //横のループ
+
+			//マップをまるごと写す
+			temp[ypos][xpos] = map[ypos][xpos];
+		}
+	}
+
+	for (ypos = 0; ypos < WORLD_H; ypos++) { //縦のループ
+		for (xpos = 0; xpos < WORLD_W; xpos++) { //横のループ
+
+			//関数-ポジションごとの生存数
+			
+			alive = lifeCount(temp, ypos, xpos);
+
+			//もし、指定座標が死滅してるなら…
+			if (temp[ypos][xpos] == 0) {
+				//生存数３で誕生
+				if (alive == 3) {
+					map[ypos][xpos] = 1;
+				}
+			}
+			//生存しているなら…
+			else {
+				//過疎・過密で死滅
+				if (alive <= 1 || alive >= 4) {
+					map[ypos][xpos] = 0;
+				}
+			}
+		}
+	}
+
+}
+
+
+//生存数
+int lifeCount(char temp[WORLD_H][WORLD_W], int ypos, int xpos) {
+
+	//生存数カウント
+	int sum = 0;
+
+	if (ypos > 0 && xpos > 0) {
+		sum += temp[ypos - 1][xpos - 1];	//左上
+	}
+
+	if (xpos > 0) {
+		sum += temp[ypos][xpos - 1];	//左
+	}
+
+	if (ypos < WORLD_H - 1 && xpos > 0) {
+		sum += temp[ypos + 1][xpos - 1];	//左下
+	}
+
+	if (ypos < WORLD_H - 1) {
+		sum += temp[ypos + 1][xpos];	//真下
+	}
+
+	if (ypos < WORLD_H - 1 && xpos < WORLD_W - 1) {
+		sum += temp[ypos + 1][xpos + 1];	//右下
+	}
+
+	if (xpos < WORLD_W - 1) {
+		sum += temp[ypos][xpos + 1];	//右
+	}
+
+	if (ypos > 0 && xpos < WORLD_W - 1) {
+		sum += temp[ypos - 1][xpos + 1];	//右上
+	}
+
+	if (ypos > 0) {
+		sum += temp[ypos - 1][xpos];	//真上
+	}
+	return sum;
+}

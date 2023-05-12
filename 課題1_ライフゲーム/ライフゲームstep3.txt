@@ -1,0 +1,288 @@
+/***********************************************************************
+* 
+* ライフゲーム
+* 
+* 作成者		作成日
+* -----------	-----------
+* 高橋謙人		2023/04/27
+* 
+* 
+* 
+* 
+************************************************************************/
+
+//#define _CRT_SECURE_NO_WARNINGS
+
+//ヘッダーファイル
+#include<stdio.h>
+#include<stdlib.h>
+#include<time.h>
+
+//マクロ定義
+#define WORLD_W 76	// 横の大きさ
+#define WORLD_H 38	// 縦の大きさ
+
+//scanfのエラーを止めるもの
+#pragma warning(disable:4996)
+
+/*****プロトタイプ宣言群*****/
+//初期化ルーチン
+void reset(char map_reset[WORLD_H][WORLD_W]);
+//map表示ルーチン
+void map_set(char denote[WORLD_H][WORLD_W]);
+//世代の進行
+void generation(char temp[WORLD_H][WORLD_W]) ;
+//生存数カウント
+int lifeCount(char temp[WORLD_H][WORLD_W], int ypos, int xpos) ;
+
+//
+
+//
+
+/**********ここまで**********/
+
+//メイン関数
+int main(void) {
+
+	//srand((unsigned)time(NULL));
+
+	//mapの２次元配列の定義
+	char map[WORLD_H][WORLD_W];
+	
+	//画面を消す
+	printf("\033[2J");
+	
+	//初期化
+	reset(map);
+	
+	//ループ
+	for (int gen = 1; gen < 1000; gen++){
+
+		//カーソル位置を高さ２行目、横１文字目に移動
+		printf("\033[2;1H");
+		printf("世代=%d\n\n", gen);
+
+		map_set(map);		//マップの表示
+		generation(map);	//世代を進める
+		
+	}
+
+	//修正予定地
+	printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+
+	return 0;
+}
+
+
+
+//初期化ルーチン
+void reset(char map_reset[WORLD_H][WORLD_W]) {
+
+	/* ループ処理と配列要素指定 */
+	int ypos;	//縦
+	int xpos;	//横
+
+
+	for (ypos = 0; ypos < WORLD_H; ypos++) {		//縦のループ
+		for (xpos = 0; xpos < WORLD_W; xpos++) {	//横のループ
+
+			/*
+			int randvl = rand() % 10;
+
+			if (randvl < 7) {
+				map_reset[ypos][xpos] = 0;	//死亡
+			}
+
+			else {
+				map_reset[ypos][xpos] = 1;	//生存
+			}
+			*/
+
+		}
+	}
+
+	FILE* fp;
+	char buf[128];
+	char* filename = "C:¥¥Users¥¥user¥¥source¥¥repos¥¥lifegame1¥¥lifegame1¥¥source.c";
+	if ((fp = fopen("sample_data2.txt", "r")) != NULL) {
+		//オープン成功
+		printf("ファイルオープン成功です！\n\n");
+	}
+	else {
+		//オープン失敗
+		//printf("ファイルオープン失敗です！\n\n");
+		return -1;
+	}
+
+	ypos = 0;
+
+	while (fgets(buf, 128, fp) != NULL) {
+		//printf("%s", buf);
+
+		char len = strlen(buf);
+		if (len >= WORLD_W) {
+			len = WORLD_W;
+		}
+		
+		for (xpos = 0; xpos < len; xpos++) {	//横のループ
+			map_reset[ypos][xpos] = 0;	//その行を一旦0にする
+		}
+		
+
+		for (xpos = 0; xpos < len; xpos++) {
+			//読み込んだ文字列の可視化
+			//printf("%c",buf[xpos]);
+			if (buf[xpos] == '1') {
+				map_reset[ypos][xpos] = 1;
+			}
+			else {
+				map_reset[ypos][xpos] = 0;
+			}
+		}
+		ypos++;
+
+	}
+	printf("\n\n\n\n\n");
+
+	fclose(fp);
+}
+
+//mapの表示ルーチン
+void map_set(char denote[WORLD_H][WORLD_W]){
+
+	/* ループ処理と配列要素指定 */
+	int ypos;
+	int xpos;
+
+	/*
+	for (ypos = 0; ypos < WORLD_H; ypos++) { //縦のループ
+		for (xpos = 0; xpos < WORLD_W; xpos++) { //横のループ
+			if (denote[ypos][xpos] != 0) {
+				printf("@");
+			}
+			else {
+				printf(".");
+			}
+		}
+		printf("\n");
+	}
+	*/
+	FILE* fp;
+	char buf[128];
+	char* filename = "C:¥¥Users¥¥user¥¥source¥¥repos¥¥lifegame1¥¥lifegame1¥¥source.c";
+	if ((fp = fopen("sample_data2.txt", "r")) != NULL) {
+		//オープン成功
+		//printf("ファイルオープン成功です！\n\n");
+	}
+	else {
+		//オープン失敗
+		//printf("ファイルオープン失敗です！\n\n");
+		return -1;
+	}
+
+	ypos = 0;
+
+	while (fgets(buf, 128, fp) != NULL) {
+		//printf("%s", buf);
+
+		char len = strlen(buf);
+		if (len >= WORLD_W) {
+			len = WORLD_W;
+		}
+		for (xpos = 0; xpos < len; xpos++) { //横のループ
+			if (denote[ypos][xpos] != 0) {
+				printf("@");
+			}
+			else {
+				printf(".");
+			}
+		}
+		ypos++;
+		printf("\n");
+	}
+}
+
+
+//世代の進行
+void generation(char map[WORLD_H][WORLD_W]) {
+	
+	int ypos;
+	int xpos;
+	
+	char alive;
+	char temp[WORLD_H][WORLD_W];
+
+	for (ypos = 0; ypos < WORLD_H; ypos++) { //縦のループ
+		for (xpos = 0; xpos < WORLD_W; xpos++) { //横のループ
+
+			//マップをまるごと写す
+			temp[ypos][xpos] = map[ypos][xpos];
+		}
+	}
+
+	for (ypos = 0; ypos < WORLD_H; ypos++) { //縦のループ
+		for (xpos = 0; xpos < WORLD_W; xpos++) { //横のループ
+
+			//関数-ポジションごとの生存数
+			
+			alive = lifeCount(temp, ypos, xpos);
+
+			//もし、指定座標が死滅してるなら…
+			if (temp[ypos][xpos] == 0) {
+				//生存数３で誕生
+				if (alive == 3) {
+					map[ypos][xpos] = 1;
+				}
+			}
+			//生存しているなら…
+			else {
+				//過疎・過密で死滅
+				if (alive <= 1 || alive >= 4) {
+					map[ypos][xpos] = 0;
+				}
+			}
+		}
+	}
+
+}
+
+
+//生存数
+int lifeCount(char temp[WORLD_H][WORLD_W], int ypos, int xpos) {
+
+	//生存数カウント
+	int sum = 0;
+
+	if (ypos > 0 && xpos > 0) {
+		sum += temp[ypos - 1][xpos - 1];	//左上
+	}
+
+	if (xpos > 0) {
+		sum += temp[ypos][xpos - 1];	//左
+	}
+
+	if (ypos < WORLD_H - 1 && xpos > 0) {
+		sum += temp[ypos + 1][xpos - 1];	//左下
+	}
+
+	if (ypos < WORLD_H - 1) {
+		sum += temp[ypos + 1][xpos];	//真下
+	}
+
+	if (ypos < WORLD_H - 1 && xpos < WORLD_W - 1) {
+		sum += temp[ypos + 1][xpos + 1];	//右下
+	}
+
+	if (xpos < WORLD_W - 1) {
+		sum += temp[ypos][xpos + 1];	//右
+	}
+
+	if (ypos > 0 && xpos < WORLD_W - 1) {
+		sum += temp[ypos - 1][xpos + 1];	//右上
+	}
+
+	if (ypos > 0) {
+		sum += temp[ypos - 1][xpos];	//真上
+	}
+	return sum;
+}

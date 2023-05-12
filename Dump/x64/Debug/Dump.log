@@ -1,0 +1,8 @@
+﻿  main.c
+D:\C\Dump\main.c(42,18): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+D:\C\Dump\main.c(57,35): warning C4267: 'function': conversion from 'size_t' to 'int', possible loss of data
+D:\C\Dump\main.c(90,20): warning C4047: '!=': 'int' differs in levels of indirection from 'void *'
+D:\C\Dump\main.c(134,21): warning C4047: '!=': 'int' differs in levels of indirection from 'void *'
+D:\C\Dump\main.c(136,17): warning C4047: '=': 'unsigned char' differs in levels of indirection from 'void *'
+D:\C\Dump\main.c(180,20): warning C4047: '==': 'int' differs in levels of indirection from 'void *'
+  Dump.vcxproj -> D:\C\Dump\x64\Debug\Dump.exe
