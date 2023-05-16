@@ -8,7 +8,8 @@
 #define C_PRT 0x01
 #define HELP_PRT 0x03
 #define A_PRT 0x04
-
+#define ESC 27
+#define ENTER 0x0d
 
 
 typedef struct {
@@ -18,10 +19,11 @@ typedef struct {
 	char help_prt;
 	char offset;
 	char address;
+	char line_break;
 }opts_t;
 
 
-void dump(unsigned char* staddr, int dsize, opts_t* opts);
+int dump(unsigned char* staddr, int dsize, opts_t* opts);
 int opts_analisys(int argc, char* argv[], opts_t* opts);
 void print_help();
 
@@ -36,6 +38,7 @@ int main(int argc,char *argv[]) {
 	opts.infileName = NULL;
 	opts.offset = NULL;
 	opts.address = 0;
+	opts.line_break = NULL;
 	//Checking User Command
 	result = opts_analisys(argc, argv, &opts);
 
@@ -55,8 +58,8 @@ int main(int argc,char *argv[]) {
 
 	//If there is No Command or pressed helped , Help show
 	if (result!=0 || opts.help_prt == HELP_PRT) {
-		printf("Command Not Found or You Can Open Two Files At The Same Time: \n");
-		printf("If No File , Please Specify 16 char String: \n");
+		fprintf(stderr, "%s \n", "Command Not Found", 30);
+		fprintf(stderr, "%s \n", "If No File , Please Specify 16 char String: ", 30);
 		print_help();
 	}
 	else {
@@ -73,14 +76,30 @@ int main(int argc,char *argv[]) {
 			//Read Dsize Every Time
 			while ((dsize = fread(buffer, sizeof(char), sizeof(buffer), fp)) > 0)
 			{
-				dump(buffer, dsize, &opts);
+				int key= dump(buffer, dsize, &opts);
+				//If /p and ESC Key is Pressed 
+				if (key == ESC) {
+					//Exit 
+					exit(0);
+				}
+				//Pressing Other Keys
+				else if (key != 0) {
+					printf("\n");
+					//Show Another 10 line;
+					opts.line_break += 10;
+					
+				}
+			
+				
+			}
+			if (opts.infileName != NULL) {
+				fclose(fp);
 			}
 			
-			fclose(fp);
 		}
 		else {
 			//No File Found on Reading and Show Help
-			printf("No File Found\n");
+			fprintf(stderr, "%s \n", "No File Found. Please Specify File.", 30);
 			print_help();
 			
 		}
@@ -98,8 +117,9 @@ void print_help() {
 	printf("/c   Add User Understandable Characters \n");
 	printf("/o[=]1000  See File from the point of 1000 \n");
 	printf("/a[=]1000  Show Absolute Memory Bank of 1000 \n");
+	printf("/p[=]1000  Show How Many Bank on one read \n");
 	printf("/? Show Help\n");
-	printf("Non Command - No File   Show Help \n");
+	printf("Non Command  Show Help \n");
 }
 //Analyzing Command and if the command exist return 0 , no command return 1
 int opts_analisys(int argc,char* argv[], opts_t* opts) {
@@ -125,22 +145,28 @@ int opts_analisys(int argc,char* argv[], opts_t* opts) {
 					break;
 				//Start Reading File from /o Bit.
 				case 'o':
-					//If There is Digit on after /o2000
-					if(*(argv[cnd] + 2) != '=' && *(argv[cnd] + 2) > 0) {
+					if (opts->infileName != NULL) {
+						//If There is Digit on after /o2000
+						if (*(argv[cnd] + 2) != '=' && *(argv[cnd] + 2) > 0) {
 
-						opts->offset = strtol((argv[cnd] + 2), NULL, 16);
-						flag = 0;
-					}
-					//If there is Digit on after /o=2000
-					else if (*(argv[cnd] + 3)!= '=' && *(argv[cnd] + 3) > 0) {
+							opts->offset = strtol((argv[cnd] + 2), NULL, 16);
+							flag = 0;
+						}
+						//If there is Digit on after /o=2000
+						else if (*(argv[cnd] + 3) != '=' && *(argv[cnd] + 3) > 0) {
 
-						opts->offset = strtol((argv[cnd] + 3), NULL, 16);
-						flag = 0;
+							opts->offset = strtol((argv[cnd] + 3), NULL, 16);
+							flag = 0;
+						}
+						// No Digit Found -> Error
+						else {
+							flag = 1;
+						}
 					}
-					// No Digit Found -> Error
 					else {
 						flag = 1;
 					}
+					
 
 					break;
 				//Show Absolute Bank
@@ -148,6 +174,30 @@ int opts_analisys(int argc,char* argv[], opts_t* opts) {
 
 					opts->address = A_PRT;
 					flag = 0;
+					break;
+					//Show Absolute Bank
+				case 'p':
+					if (opts->infileName != NULL) {
+						//If There is Digit on after /o2000
+						if (*(argv[cnd] + 2) != '=' && *(argv[cnd] + 2) > 0) {
+
+							opts->line_break = strtol((argv[cnd] + 2), NULL, 10);
+							flag = 0;
+						}
+						//If there is Digit on after /o=2000
+						else if (*(argv[cnd] + 3) != '=' && *(argv[cnd] + 3) > 0) {
+
+							opts->line_break = strtol((argv[cnd] + 3), NULL, 10);
+							flag = 0;
+						}
+						// No Digit Found -> Error
+						else {
+							flag = 1;
+						}
+					}
+					else {
+						flag = 1;
+					}
 					break;
 				//No Command or Error Show Help
 				default: 
@@ -178,7 +228,7 @@ int opts_analisys(int argc,char* argv[], opts_t* opts) {
 	return flag;
 }
 
-void dump( unsigned char* staddr,int dsize, opts_t* opts) {
+int dump( unsigned char* staddr,int dsize, opts_t* opts) {
 	/*
 	
 		unsigned char *staddr = ダンプをするバッファへのポインタ
@@ -194,213 +244,229 @@ void dump( unsigned char* staddr,int dsize, opts_t* opts) {
 	static unsigned char sjis1;
 	static int row;
 	static int flag;
+	int esckey;
 
 	//If There is /a flag show Address
 	if (flag==0 && opts->address == A_PRT) {
 		//Show Address with Offset
-		address += opts->offset;
+		address =address+ opts->offset;
 		//First Time Checking and working only
 		flag = 1;
 	}
 	
-	//Printing Address
-	while (bytecnt < dsize) {
+	//If there is P and the P is the same as row number , Wait for User Keyboard
+	if (opts->line_break != NULL && row == opts->line_break) {
+		printf("\n Stopped At Line Number : %d . Press ESC to Escape or Press Any Key To Continue.", row);
+		esckey = getch();
+		return esckey;
 
-		//If Sjis have, its means that there is a kanji coming
-		if (sjis1 != NULL) {
-			printf("%c%c\n", sjis1, staddr[bytecnt]);
+	}
+	//Without /p or /p is not the same as row
+	else {
+		//Printing Address
+		while (bytecnt < dsize) {
 
-		}
-		
-		//If Option Have H_PRT
-		if (opts->h_prt == H_PRT) {
-			//Only First Time
-			if (row == 0) {
-				//If Option Have C_PRT
-				if (opts->c_prt ==C_PRT) {
-					//if options have /a
-					if (opts->address == A_PRT) {
-						printf("\n");
-						printf("  Addr     ");
-						printf("0 1  2 3  4 5  6 7  8 9  A B  C D  E F     0 2 4 6 8 A C E ");
-						printf("\n");
-						printf("-------- ---- ---- ---- ---- ---- ---- ---- ----     ----------------");
-						printf("\n");
-					}
-					else {
-						printf("0 1  2 3  4 5  6 7  8 9  A B  C D  E F     0 2 4 6 8 A C E ");
-						printf("\n");
-						printf("---- ---- ---- ---- ---- ---- ---- ----     ----------------");
-						printf("\n");
-					}
-
-				}
-				else {
-					//if options have /a
-					if (opts->address == A_PRT) {
-						printf("\n");
-						printf("  Addr     ");
-						printf("0 1  2 3  4 5  6 7  8 9  A B  C D  E F     0 2 4 6 8 A C E ");
-						printf("\n");
-						printf("-------- ---- ---- ---- ---- ---- ---- ---- ----     ----------------");
-						printf("\n");
-					}
-					else {
-						printf("0 1  2 3  4 5  6 7  8 9  A B  C D  E F     0 2 4 6 8 A C E ");
-						printf("\n");
-						printf("---- ---- ---- ---- ---- ---- ---- ----     ----------------");
-						printf("\n");
-					}
-				}
-
-			}
-
-		}
-		else {
-
-			if (row % 16 == 0) {
-				//Print 1 times in 16 count
-				//If opt have only C_PRT
-				if (opts->c_prt == C_PRT) {
-					//if options have /a
-					if (opts->address == A_PRT) {
-						printf("\n");
-						printf("  Addr     ");
-						printf("0 1  2 3  4 5  6 7  8 9  A B  C D  E F     0 2 4 6 8 A C E ");
-						printf("\n");
-						printf("-------- ---- ---- ---- ---- ---- ---- ---- ----     ----------------");
-						printf("\n");
-					}
-					else {
-						printf("0 1  2 3  4 5  6 7  8 9  A B  C D  E F     0 2 4 6 8 A C E ");
-						printf("\n");
-						printf("---- ---- ---- ---- ---- ---- ---- ----     ----------------");
-						printf("\n");
-					}
-				
-
-				}
-				//If opt have H_PRT Only
-				else {
-					//if options have /a
-					if (opts->address == A_PRT) {
-						printf("\n");
-						printf("  Addr     ");
-						printf("0 1  2 3  4 5  6 7  8 9  A B  C D  E F     0 2 4 6 8 A C E ");
-						printf("\n");
-						printf("-------- ---- ---- ---- ---- ---- ---- ---- ----     ----------------");
-						printf("\n");
-					}
-					else {
-						printf("0 1  2 3  4 5  6 7  8 9  A B  C D  E F     0 2 4 6 8 A C E ");
-						printf("\n");
-						printf("---- ---- ---- ---- ---- ---- ---- ----     ----------------");
-						printf("\n");
-					}
-				}
-			}
-		}
-	
-		//	//if options have /a print Memory Address here
-		if (opts->address == A_PRT) {
-			printf("  %07X0", address);
-			printf(" ");
-		}
-		
-
-
-		temp = bytecnt;
-		for (col = 0; col < COLSIZE; col++) {
-
-			if (bytecnt < dsize) {
-				//Printing HEX
-				printf("%02X", staddr[bytecnt]);
-
-				bytecnt = bytecnt + 1;
-			}
-			else {
-				printf("  ");
-			}
-
-			if (col % 2 != 0) {
-				printf(" ");
-			}
-		}
-		printf("   ");
-		//If Opt have H_PRT print characters but not C_PRT
-		if (opts->h_prt == H_PRT) {
-			if ((opts->c_prt)!= C_PRT) {
-				printf("\n");
-			}
-
-
-		}
-
-
-		////Printing Words
-		//Reseting bytecnt to the first word of the row
-		//If Opt have CPRT print characters
-		if (opts->c_prt==C_PRT) {
-			bytecnt = temp;
-			for (col = 0; col < COLSIZE; col++) {
-				//If there is sjis
+				//If Sjis have, its means that there is a kanji coming
 				if (sjis1 != NULL) {
-					printf(" ");
-					sjis1 = NULL;
-					//Since we printed kanji we have to adjust the place again
-					bytecnt += 1;
-					col += 1;
+					printf("%c%c\n", sjis1, staddr[bytecnt]);
+
 				}
 
-				if (bytecnt < dsize) {
+				//If Option Have H_PRT
+				if (opts->h_prt == H_PRT) {
+					//Only First Time
+					if (row == 0) {
+						//If Option Have C_PRT
+						if (opts->c_prt == C_PRT) {
+							//if options have /a
+							if (opts->address == A_PRT) {
+								printf("\n");
+								printf("  Addr     ");
+								printf("0 1  2 3  4 5  6 7  8 9  A B  C D  E F     0 2 4 6 8 A C E ");
+								printf("\n");
+								printf("-------- ---- ---- ---- ---- ---- ---- ---- ----     ----------------");
+								printf("\n");
+							}
+							else {
+								printf("0 1  2 3  4 5  6 7  8 9  A B  C D  E F     0 2 4 6 8 A C E ");
+								printf("\n");
+								printf("---- ---- ---- ---- ---- ---- ---- ----     ----------------");
+								printf("\n");
+							}
 
-					//2 byte Kanji Check
-					if (((ch = staddr[bytecnt]) >= 0x81 && ch <= 0x9F) || (ch >= 0xE0 && ch <= 0xEF)) {
-						//Print Until the last -1
-						if (col < (COLSIZE - 1)) {
+						}
+						else {
+							//if options have /a
+							if (opts->address == A_PRT) {
+								printf("\n");
+								printf("  Addr     ");
+								printf("0 1  2 3  4 5  6 7  8 9  A B  C D  E F     0 2 4 6 8 A C E ");
+								printf("\n");
+								printf("-------- ---- ---- ---- ---- ---- ---- ---- ----     ----------------");
+								printf("\n");
+							}
+							else {
+								printf("0 1  2 3  4 5  6 7  8 9  A B  C D  E F     0 2 4 6 8 A C E ");
+								printf("\n");
+								printf("---- ---- ---- ---- ---- ---- ---- ----     ----------------");
+								printf("\n");
+							}
+						}
 
-							printf("%c%c", ch, staddr[bytecnt + 1]);
-							//Since there is bytecnt+1 we have to adjust the place again
+					}
+
+				}
+				else {
+
+					if (row % 16 == 0) {
+						//Print 1 times in 16 count
+						//If opt have only C_PRT
+						if (opts->c_prt == C_PRT) {
+							//if options have /a
+							if (opts->address == A_PRT) {
+								printf("\n");
+								printf("  Addr     ");
+								printf("0 1  2 3  4 5  6 7  8 9  A B  C D  E F     0 2 4 6 8 A C E ");
+								printf("\n");
+								printf("-------- ---- ---- ---- ---- ---- ---- ---- ----     ----------------");
+								printf("\n");
+							}
+							else {
+								printf("0 1  2 3  4 5  6 7  8 9  A B  C D  E F     0 2 4 6 8 A C E ");
+								printf("\n");
+								printf("---- ---- ---- ---- ---- ---- ---- ----     ----------------");
+								printf("\n");
+							}
+
+
+						}
+						//If opt have H_PRT Only
+						else {
+							//if options have /a
+							if (opts->address == A_PRT) {
+								printf("\n");
+								printf("  Addr     ");
+								printf("0 1  2 3  4 5  6 7  8 9  A B  C D  E F     0 2 4 6 8 A C E ");
+								printf("\n");
+								printf("-------- ---- ---- ---- ---- ---- ---- ---- ----     ----------------");
+								printf("\n");
+							}
+							else {
+								printf("0 1  2 3  4 5  6 7  8 9  A B  C D  E F     0 2 4 6 8 A C E ");
+								printf("\n");
+								printf("---- ---- ---- ---- ---- ---- ---- ----     ----------------");
+								printf("\n");
+							}
+						}
+					}
+				}
+
+				//	//if options have /a print Memory Address here
+				if (opts->address == A_PRT) {
+
+					printf("  %08x", address);
+					printf(" ");
+				}
+
+
+
+				temp = bytecnt;
+				for (col = 0; col < COLSIZE; col++) {
+
+					if (bytecnt < dsize) {
+						//Printing HEX
+						printf("%02X", staddr[bytecnt]);
+
+						bytecnt = bytecnt + 1;
+					}
+					else {
+						printf("  ");
+					}
+
+					if (col % 2 != 0) {
+						printf(" ");
+					}
+				}
+				printf("   ");
+				//If Opt have H_PRT print characters but not C_PRT
+				if (opts->h_prt == H_PRT) {
+					if ((opts->c_prt) != C_PRT) {
+						printf("\n");
+					}
+
+
+				}
+
+
+				////Printing Words
+				//Reseting bytecnt to the first word of the row
+				//If Opt have CPRT print characters
+				if (opts->c_prt == C_PRT) {
+					bytecnt = temp;
+					for (col = 0; col < COLSIZE; col++) {
+						//If there is sjis
+						if (sjis1 != NULL) {
+							printf(" ");
+							sjis1 = NULL;
+							//Since we printed kanji we have to adjust the place again
 							bytecnt += 1;
 							col += 1;
-
 						}
-						//Save Last Char (1Byte <-Save this +1Byte Kanji)
+
+						if (bytecnt < dsize) {
+
+							//2 byte Kanji Check
+							if (((ch = staddr[bytecnt]) >= 0x81 && ch <= 0x9F) || (ch >= 0xE0 && ch <= 0xEF)) {
+								//Print Until the last -1
+								if (col < (COLSIZE - 1)) {
+
+									printf("%c%c", ch, staddr[bytecnt + 1]);
+									//Since there is bytecnt+1 we have to adjust the place again
+									bytecnt += 1;
+									col += 1;
+
+								}
+								//Save Last Char (1Byte <-Save this +1Byte Kanji)
+								else {
+
+									sjis1 = ch;
+								}
+
+							}
+							//Just CHecking Word if 1 byte kanji print
+							else if (ch >= ' ' && ch < 0x7f ||
+								ch >0xA1 && ch <= 0xDF)
+							{
+								printf("%c", ch);
+							}
+							else {
+								printf(".");
+							}
+
+
+							bytecnt = bytecnt + 1;
+						}
 						else {
-
-							sjis1 = ch;
+							printf(" ");
 						}
 
 					}
-					//Just CHecking Word if 1 byte kanji print
-					else if (ch >= ' ' && ch < 0x7f ||
-						ch >0xA1 && ch <= 0xDF)
-					{
-						printf("%c", ch);
+					//If there is no Temp chara for kanji, skip a line
+					if (sjis1 == NULL) {
+						printf("\n");
 					}
-					else {
-						printf(".");
-					}
-
-
-					bytecnt = bytecnt + 1;
 				}
-				else {
-					printf(" ");
-				}
+				//New Memory Address
+				address = address + 16;
+				//New Row
+				row = row + 1;
+			
 
-			}
-			//If there is no Temp chara for kanji, skip a line
-			if (sjis1 == NULL) {
-				printf("\n");
-			}
 		}
-		//New Memory Address
-		address = address + 1;
-		//New Row
-		row = row + 1;
 	}
+	return 0;
 
+	
 
 
 }
