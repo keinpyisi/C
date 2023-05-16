@@ -1,0 +1,12 @@
+﻿  mydump.c
+D:\C\mydump\mydump.c(36,19): warning C4047: '=': 'char' differs in levels of indirection from 'void *'
+D:\C\mydump\mydump.c(37,22): warning C4047: '=': 'char' differs in levels of indirection from 'void *'
+D:\C\mydump\mydump.c(38,19): warning C4047: '=': 'char' differs in levels of indirection from 'void *'
+D:\C\mydump\mydump.c(40,20): warning C4047: '=': 'char' differs in levels of indirection from 'void *'
+D:\C\mydump\mydump.c(77,20): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+D:\C\mydump\mydump.c(132,22): warning C4013: 'strtol' undefined; assuming extern returning int
+D:\C\mydump\mydump.c(210,20): warning C4047: '!=': 'int' differs in levels of indirection from 'void *'
+D:\C\mydump\mydump.c(347,22): warning C4047: '!=': 'int' differs in levels of indirection from 'void *'
+D:\C\mydump\mydump.c(349,18): warning C4047: '=': 'unsigned char' differs in levels of indirection from 'void *'
+D:\C\mydump\mydump.c(394,21): warning C4047: '==': 'int' differs in levels of indirection from 'void *'
+  mydump.vcxproj -> D:\C\mydump\x64\Debug\mydump.exe

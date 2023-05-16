@@ -32,7 +32,7 @@ int main(void) {
 	int dsize;
 	char name[] = "s-jis2.txt";
 	//char name[] = "test.txt";
-
+		
 	/* Open file for both reading and writing */
 	fp = fopen(name, "rb");
 
@@ -41,7 +41,7 @@ int main(void) {
 		//Read Dsize Every Time
 		while((dsize = fread(buffer, sizeof(char), sizeof(buffer), fp)) >0)
 		 {
-			dump(name, buffer, 0, dsize, C_PRT);
+			dump(name, buffer, 0, dsize, C_PRT+H_PRT);
 		}
 		fclose(fp);
 	}
@@ -54,7 +54,7 @@ int main(void) {
 			bin_data[filcnt] = filcnt & 0xff;
 		}
 
-		dump("Have ASCII", asc_data, 0, strlen(asc_data), H_PRT + C_PRT);
+		dump("Have ASCII", asc_data, 0, strlen(asc_data), C_PRT);
 		dump("Have BINARY", bin_data, 0, 512, C_PRT);
 	}
 	
@@ -78,8 +78,8 @@ void dump(char* title, unsigned char *staddr, int offset, int dsize, char opt) {
 	int temp;
 	static unsigned char ch;
 	static unsigned char sjis1;
-
-
+	static int row;
+	staddr += offset;
 	//printf("%s \n\n",title);
 	
 
@@ -91,16 +91,64 @@ void dump(char* title, unsigned char *staddr, int offset, int dsize, char opt) {
 			printf("%c%c\n",  sjis1, staddr[bytecnt]);
 
 		}
-		if (address % 16 == 0) {
-			//Printing Header
-			printf("\n");
-			printf("  Addr     0 1  2 3  4 5  6 7  8 9  A B  C D  E F     0 2 4 6 8 A C E");
-			printf("\n");
-			printf("-------- ---- ---- ---- ---- ---- ---- ---- ----     ----------------");
-			printf("\n");
 
+		//If Option Have H_PRT
+		if (opt & H_PRT) {
+			//Only First Time
+			if (row == 0) {
+				//If Option Have C_PRT
+				if (opt & C_PRT) {
+					printf("\n");
+					printf("  Addr     0 1  2 3  4 5  6 7  8 9  A B  C D  E F     0 2 4 6 8 A C E ");
+					printf("\n");
+					printf("-------- ---- ---- ---- ---- ---- ---- ---- ----     ----------------");
+					printf("\n");
+
+				}
+				else {
+					printf("\n");
+					printf("  Addr     0 1  2 3  4 5  6 7  8 9  A B  C D  E F ");
+					printf("\n");
+					printf("-------- ---- ---- ---- ---- ---- ---- ---- ----  ");
+					printf("\n");
+				}
+				
+			}
+			
 		}
-		
+		else {
+			
+			if (row % 16 == 0) {
+				//Print 1 times in 16 count
+				//If opt have only C_PRT
+				if (opt & C_PRT) {
+					printf("\n");
+					printf("  Addr     0 1  2 3  4 5  6 7  8 9  A B  C D  E F     0 2 4 6 8 A C E ");
+					printf("\n");
+					printf("-------- ---- ---- ---- ---- ---- ---- ---- ----     ----------------");
+					printf("\n");
+
+				}
+				//If opt have H_PRT Only
+				else {
+					printf("\n");
+					printf("  Addr     0 1  2 3  4 5  6 7  8 9  A B  C D  E F ");
+					printf("\n");
+					printf("-------- ---- ---- ---- ---- ---- ---- ---- ----  ");
+					printf("\n");
+				}
+			}
+		}
+		//if (address % 16 == 0) {
+		//	//Printing Header
+		//	printf("\n");
+		//	printf("  Addr     0 1  2 3  4 5  6 7  8 9  A B  C D  E F     0 2 4 6 8 A C E");
+		//	printf("\n");
+		//	printf("-------- ---- ---- ---- ---- ---- ---- ---- ----     ----------------");
+		//	printf("\n");
+
+		//}
+		//
 		//Address
 		printf("  %07X0", address);
 		printf(" ");
@@ -124,63 +172,76 @@ void dump(char* title, unsigned char *staddr, int offset, int dsize, char opt) {
 			}
 		}
 		printf("   ");
+		//If Opt have H_PRT print characters but not C_PRT
+		if (opt & H_PRT) {
+			if (!(opt & C_PRT)) {
+				printf("\n");
+			}
+			
+
+		}
+	
 
 		////Printing Words
 		//Reseting bytecnt to the first word of the row
-		bytecnt = temp;
-		
-		for (col = 0; col < COLSIZE; col++) {
-			//If there is sjis
-			if (sjis1 != NULL) {
-				printf(" ");
-				sjis1 = NULL;
-				//Since we printed kanji we have to adjust the place again
-				bytecnt += 1;
-				col += 1;
-			}
+		//If Opt have CPRT print characters
+		if (opt & C_PRT) {
+			bytecnt = temp;
+			for (col = 0; col < COLSIZE; col++) {
+				//If there is sjis
+				if (sjis1 != NULL) {
+					printf(" ");
+					sjis1 = NULL;
+					//Since we printed kanji we have to adjust the place again
+					bytecnt += 1;
+					col += 1;
+				}
 
-			if (bytecnt < dsize) {
-				
-				//2 byte Kanji Check
-				if(((ch = staddr[bytecnt])>=0x81 && ch<=0x9F) || (ch>= 0xE0 && ch<= 0xEF) ){
-					//Print Until the last -1
-					if (col< (COLSIZE - 1)) {
-							
+				if (bytecnt < dsize) {
+
+					//2 byte Kanji Check
+					if (((ch = staddr[bytecnt]) >= 0x81 && ch <= 0x9F) || (ch >= 0xE0 && ch <= 0xEF)) {
+						//Print Until the last -1
+						if (col < (COLSIZE - 1)) {
+
 							printf("%c%c", ch, staddr[bytecnt + 1]);
 							//Since there is bytecnt+1 we have to adjust the place again
 							bytecnt += 1;
 							col += 1;
-						
+
+						}
+						//Save Last Char (1Byte <-Save this +1Byte Kanji)
+						else {
+
+							sjis1 = ch;
+						}
+
 					}
-					//Save Last Char (1Byte <-Save this +1Byte Kanji)
+					//Just CHecking Word if 1 byte kanji print
+					else if (ch >= ' ' && ch < 0x7f ||
+						ch >0xA1 && ch <= 0xDF)
+					{
+						printf("%c", ch);
+					}
 					else {
-						
-						sjis1 = ch;
+						printf(".");
 					}
-					
-				}
-				//Just CHecking Word if 1 byte kanji print
-				else if (ch >= ' ' && ch < 0x7f ||
-					ch >0xA1 && ch <= 0xDF)
-				{
-					printf("%c", ch);
+
+
+					bytecnt = bytecnt + 1;
 				}
 				else {
-					printf(".");
+					printf(" ");
 				}
-			
 
-				bytecnt = bytecnt + 1;
 			}
-			else {
-				printf(" ");
+			if (sjis1 == NULL) {
+				printf("\n");
 			}
-
 		}
-		if (sjis1 == NULL) {
-			printf("\n");
-		}
+	
 		address = address + 1;
+		row = row + 1;
 	}
 	
 
